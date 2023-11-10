@@ -36,6 +36,8 @@ const dbg = createDebug("{Recaptcha}");
 const debug = dbg;
 const dispatch = createEventDispatcher();
 
+export let id = "googleRecaptchaDiv"
+
 export let sitekey;
 
 export let badge = "top";
@@ -328,7 +330,7 @@ const sleep = (seconds) =>
 <!----------------------------------------------------------------┐
                                                                └-->
 
-<div id="googleRecaptchaDiv" class="g-recaptcha" />
+<div {id} class="g-recaptcha" />
 
 <!--------------------------------------------------- comments ----;
 
