@@ -1,5 +1,5 @@
 {
-    "name": "svelte-recaptcha-v2",
+    "name": "@sliu2017/svelte-recaptcha-v2",
     "version": "0.0.2",
     "description": "Google ReCaptcha v2 implementation for Svelte and SvelteKit",
     "scripts": {
