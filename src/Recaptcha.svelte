@@ -29,11 +29,8 @@ export let observer = defer();
 <script>
 import { createEventDispatcher } from "svelte";
 import { onMount, onDestroy } from "svelte";
-import { default as createDebug } from "debug";
 import { browser } from "./lib";
 
-const dbg = createDebug("{Recaptcha}");
-const debug = dbg;
 const dispatch = createEventDispatcher();
 
 export let id = "googleRecaptchaDiv";
@@ -73,42 +70,22 @@ let closeObserver = null;
 /*---------------------------------------------| dispatchers |--*/
 
 const eventEmitters = {
-    onExpired: async () => {
-        debug("expired?");
-        recaptcha.reset(instanceId);
-    },
+    onExpired: async () => {},
     onError: async (err) => {
-        const debug = dbg.extend("onError");
-        debug("an error occured during initialization");
         dispatch("error", { msg: "please check your site key" });
         captcha.errors.push("empty");
-        recaptcha.reset(instanceId);
     },
     onSuccess: async (token) => {
-        const debug = dbg.extend("onSuccess");
-        debug("dispatching success, we have a token");
         dispatch("success", { msg: "ok", token: token });
-
-        setTimeout(() => recaptcha.reset(instanceId), 1000);
-        debug("resetting, google needs allowed time if visible recaptcha..");
-
-        observer = defer();
-        debug("resetting observer");
     },
     onReady: () => {
-        const debug = dbg.extend("onReady");
         dispatch("ready");
-        debug("captcha is ready and available in DOM");
     },
     onOpen: (mutations) => {
-        const debug = dbg.extend("onOpen");
         dispatch("open");
-        debug("captcha decided to ask a challange");
     },
     onClose: (mutations) => {
-        const debug = dbg.extend("onClose");
         if (browser && mutations.length === 1 && !window.grecaptcha.getResponse()) {
-            debug("captcha window was closed");
             dispatch("close");
         } /*
            │close mutation fires twice, probably because
@@ -133,7 +110,6 @@ const captcha = {
     /*setInterval timer to update state*/
 
     isLoaded: () => {
-        const debug = dbg.extend("isLoaded");
         captcha.ready =
             browser &&
             window &&
@@ -144,20 +120,13 @@ const captcha = {
             })
                 ? true
                 : false;
-        debug("captcha.isLoaded(): " + captcha.ready);
         return captcha.ready;
     },
     stopTimer: () => {
-        const debug = dbg.extend("stopTimer");
-        debug("stopping timer");
         clearInterval(captcha.retryTimer);
     },
     startTimer: () => {
-        const debug = dbg.extend("startTimer");
-        debug("check in 1s intervals");
-
         captcha.retryTimer = setInterval(() => {
-            debug("checking every second");
             if (captcha.isLoaded()) {
                 captcha.stopTimer();
                 captcha.modal();
@@ -168,15 +137,11 @@ const captcha = {
 
             if (captcha.errors.length > 3) {
                 captcha.wipe();
-                debug("too many errors, no recaptcha for you at this  time");
             }
         }, 1000);
     },
 
     modal: () => {
-        const debug = dbg.extend("modal");
-        debug("finding recaptcha iframe");
-
         const iframe = document.getElementsByTagName("iframe");
         recaptchaModal = iframe.find((x) => {
             return x.src.includes(iframeSrc);
@@ -184,9 +149,6 @@ const captcha = {
     },
 
     openHandle: () => {
-        const debug = dbg.extend("openHandler");
-        debug("adding observer");
-
         openObserver = new MutationObserver((x) => {
             return recaptchaModal.style.opacity == 1 && eventEmitters.onOpen(x);
         });
@@ -198,9 +160,6 @@ const captcha = {
     },
 
     closeHandle: () => {
-        const debug = dbg.extend("closeHandle");
-        debug("adding observer");
-
         closeObserver = new MutationObserver((x) => {
             return recaptchaModal.style.opacity == 0 && eventEmitters.onClose(x);
         });
@@ -211,9 +170,6 @@ const captcha = {
     },
 
     inject: () => {
-        const debug = dbg.extend("inject");
-        debug("initializing API, merging google API to svelte recaptcha");
-
         recaptcha = window.grecaptcha;
         /*
          │associate window component to svelte, this allows us
@@ -232,20 +188,16 @@ const captcha = {
         });
     },
     wipe: () => {
-        const debug = dbg.extend("onDestroy");
         try {
             if (browser) {
                 clearInterval(captcha.retryTimer);
-                debug("cleaning up clearInterval");
 
                 if (recaptcha) {
                     recaptcha.reset(instanceId);
-                    debug("resetting captcha api");
 
                     delete window.grecaptcha;
                     delete window.apiLoaded;
                     delete window.recaptchaCloseListener;
-                    debug("deleting window.grecaptcha");
 
                     if (openObserver) openObserver.disconnect();
                     if (closeObserver) closeObserver.disconnect();
@@ -253,13 +205,11 @@ const captcha = {
                         .querySelectorAll("script[src*=recaptcha]")
                         .forEach((script) => {
                             script.remove();
-                            debug("deleting google script tag");
                         });
                     document
                         .querySelectorAll("iframe[src*=recaptcha]")
                         .forEach((iframe) => {
                             iframe.remove();
-                            debug("deleting google iframe");
                         });
                 }
             }
@@ -275,19 +225,13 @@ const captcha = {
 };
 
 const apiLoaded = async () => {
-    const debug = dbg.extend("apiLoaded");
-    debug("invoked, resolving deferred promise");
     wait.resolve(true);
 };
 
 onMount(async () => {
-    const debug = dbg.extend("onMount");
-
     if (browser) window.apiLoaded = apiLoaded;
-    debug("associate apiLoad to window object");
 
     if (sleepTime) {
-        debug("sleeping for a bit before inserting recaptcha script");
         await sleep(sleepTime);
     }
 
@@ -301,23 +245,18 @@ onMount(async () => {
     }
 
     wait = defer();
-    debug("waiting for google api to finish loading");
 
     await Promise.resolve(wait);
-    debug("deferred promise was resolved...");
 
     if (browser) captcha.inject();
-    debug("injecting captcha code");
 
     if (browser) HTMLCollection.prototype.find = Array.prototype.find;
     /*needed to detect iframe for open, close events*/
 
     captcha.startTimer();
-    debug("polling for captcha to appear in DOM");
 });
 
 onDestroy(async () => {
-    const debug = dbg.extend("onDestroy");
     captcha.wipe();
 });
 
