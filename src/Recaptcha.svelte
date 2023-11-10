@@ -36,7 +36,7 @@ const dbg = createDebug("{Recaptcha}");
 const debug = dbg;
 const dispatch = createEventDispatcher();
 
-export let id = "googleRecaptchaDiv"
+export let id = "googleRecaptchaDiv";
 
 export let sitekey;
 
@@ -221,7 +221,7 @@ const captcha = {
          */
 
         window.grecaptcha.ready(() => {
-            instanceId = grecaptcha.render("googleRecaptchaDiv", {
+            instanceId = grecaptcha.render(id, {
                 "badge": badge,
                 "sitekey": sitekey,
                 "callback": eventEmitters.onSuccess,
@@ -330,7 +330,7 @@ const sleep = (seconds) =>
 <!----------------------------------------------------------------┐
                                                                └-->
 
-<div {id} class="g-recaptcha" />
+<div id={id} class="g-recaptcha" />
 
 <!--------------------------------------------------- comments ----;
 
